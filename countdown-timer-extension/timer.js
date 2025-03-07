@@ -33,7 +33,6 @@ function injectCountdownTimer() {
         transition: opacity 0.3s, width 0.3s;
       }
       .countdown-timer.minimized {
-        width: 80px;
         opacity: 0.7;
       }
       .countdown-timer:hover {
