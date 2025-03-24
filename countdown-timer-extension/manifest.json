@@ -11,9 +11,13 @@
     },
     "default_title": "Add Countdown Timer"
   },
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "background": {
     "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
   },
   "icons": {
     "16": "icons/icon16.png",

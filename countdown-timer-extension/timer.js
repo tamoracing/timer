@@ -13,6 +13,20 @@ if (window.countdownTimerInjected) {
 
 // Function to inject our timer
 function injectCountdownTimer() {
+  // Load saved settings first, then create the timer
+  chrome.storage.sync.get(
+    {
+      defaultMinutes: 5,
+      defaultSeconds: 0
+    },
+    function(items) {
+      createTimer(items.defaultMinutes, items.defaultSeconds);
+    }
+  );
+}
+
+// Function to create the timer with specified default time
+function createTimer(defaultMinutes, defaultSeconds) {
   // Create the style element if it doesn't exist
   if (!document.getElementById('countdown-timer-styles')) {
     const style = document.createElement('style');
@@ -33,6 +47,7 @@ function injectCountdownTimer() {
         transition: opacity 0.3s, width 0.3s;
       }
       .countdown-timer.minimized {
+        width: 80px;
         opacity: 0.7;
       }
       .countdown-timer:hover {
@@ -190,8 +205,8 @@ function injectCountdownTimer() {
 
   // Set up timer state
   let isRunning = false;
-  let minutes = 5;
-  let seconds = 0;
+  let minutes = defaultMinutes;
+  let seconds = defaultSeconds;
   let timeLeft = minutes * 60 + seconds;
   let soundEnabled = true;
   let interval = null;
