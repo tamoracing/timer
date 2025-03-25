@@ -13,6 +13,21 @@ if (window.countdownTimerInjected) {
 
 // Function to inject our timer
 function injectCountdownTimer() {
+  // Load saved settings first, then create the timer
+  chrome.storage.sync.get(
+    {
+      defaultMinutes: 5,
+      defaultSeconds: 0,
+      peopleList: []
+    },
+    function(items) {
+      createTimer(items.defaultMinutes, items.defaultSeconds, items.peopleList);
+    }
+  );
+}
+
+// Function to create the timer with specified default time
+function createTimer(defaultMinutes, defaultSeconds, peopleList) {
   // Create the style element if it doesn't exist
   if (!document.getElementById('countdown-timer-styles')) {
     const style = document.createElement('style');
@@ -178,6 +193,24 @@ function injectCountdownTimer() {
       .countdown-timer-mini {
         display: none;
       }
+      .random-list-container {
+        width: 100%;
+        margin-top: 12px;
+        padding: 10px;
+        border: 1px solid #e1e3e6;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        font-size: 14px;
+        line-height: 1.4;
+        text-align: center;
+      }
+      .random-list-names {
+        font-weight: bold !important;
+      }
+      .random-list-empty {
+        color: #5f6368;
+        font-size: 13px;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -190,18 +223,66 @@ function injectCountdownTimer() {
 
   // Set up timer state
   let isRunning = false;
-  let minutes = 5;
-  let seconds = 0;
+  let minutes = defaultMinutes;
+  let seconds = defaultSeconds;
   let timeLeft = minutes * 60 + seconds;
   let soundEnabled = true;
   let interval = null;
   let minimized = false;
+  let currentPeopleList = [...peopleList];
+  let showRandomList = false;
+  
+  // Preload the boxing bell sound
+  const bellSound = new Audio(chrome.runtime.getURL('boxing-bell.mp3'));
 
   // Function to format time as MM:SS
   function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Function to shuffle array (Fisher-Yates algorithm)
+  function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }
+
+  // Function to toggle random list and shuffle it
+  function toggleRandomList() {
+    if (!showRandomList) {
+      showRandomList = true;
+    } else {
+      // If already showing, just shuffle the list
+      currentPeopleList = shuffleArray(currentPeopleList);
+    }
+    renderTimer();
+  }
+
+  // Function to render the random list
+  function renderRandomList() {
+    if (!showRandomList) return '';
+    
+    let listHTML = '<div class="random-list-container">';
+    
+    if (currentPeopleList.length === 0) {
+      listHTML += `
+        <div class="random-list-empty">
+          No hay personas en la lista. Agrega personas en la configuración de la extensión.
+        </div>
+      `;
+    } else {
+      listHTML += '<div class="random-list-names" style="font-weight: bold;">';
+      listHTML += currentPeopleList.join(' • ');
+      listHTML += '</div>';
+    }
+    
+    listHTML += '</div>';
+    return listHTML;
   }
 
   // Function to render the timer UI
@@ -278,6 +359,15 @@ function injectCountdownTimer() {
             Reset
           </button>
         </div>
+        
+        <div class="countdown-timer-buttons" style="margin-top: 12px;">
+          <button class="countdown-timer-action" style="background-color: #34a853; color: white; border: none;" id="toggleRandomList">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            ${showRandomList ? 'Mezclar Lista' : 'Lista Aleatoria'}
+          </button>
+        </div>
+        
+        ${renderRandomList()}
       </div>
     `;
 
@@ -344,6 +434,22 @@ function injectCountdownTimer() {
       resetTimer();
     });
 
+    // Random List button
+    const randomListBtn = timer.querySelector('#toggleRandomList');
+    if (randomListBtn) {
+      randomListBtn.addEventListener('click', () => {
+        // If not showing, shuffle and show
+        if (!showRandomList) {
+          currentPeopleList = shuffleArray(currentPeopleList);
+          showRandomList = true;
+        } else {
+          // If already showing, just shuffle
+          currentPeopleList = shuffleArray(currentPeopleList);
+        }
+        renderTimer();
+      });
+    }
+
     // Minutes input
     const minutesInput = timer.querySelector('#timer-minutes');
     if (minutesInput) {
@@ -378,7 +484,7 @@ function injectCountdownTimer() {
       } else {
         pauseTimer();
         if (soundEnabled) {
-          playAlarmSound();
+          playBoxingBellSound();
         }
       }
     }, 1000);
@@ -398,44 +504,33 @@ function injectCountdownTimer() {
     renderTimer();
   }
 
-  // Function to play alarm sound
-  function playAlarmSound() {
-    // Create a simple beep sound using the Web Audio API
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+  // Function to play boxing bell sound using the MP3 file
+  function playBoxingBellSound() {
+    // Reset the audio to the beginning (in case it was played before)
+    bellSound.currentTime = 0;
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 800;
-    gainNode.gain.value = 0.5;
-    
-    oscillator.start();
-    
-    // Beep pattern
-    setTimeout(() => {
-      oscillator.stop();
-      const oscillator2 = audioContext.createOscillator();
-      oscillator2.connect(gainNode);
-      oscillator2.type = 'sine';
-      oscillator2.frequency.value = 800;
-      oscillator2.start();
+    // Play the sound
+    bellSound.play().catch(error => {
+      console.error("Error playing boxing bell sound:", error);
+      
+      // Fallback to a simple beep if the MP3 fails to play
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.5;
+      
+      oscillator.start();
       
       setTimeout(() => {
-        oscillator2.stop();
-        const oscillator3 = audioContext.createOscillator();
-        oscillator3.connect(gainNode);
-        oscillator3.type = 'sine';
-        oscillator3.frequency.value = 800;
-        oscillator3.start();
-        
-        setTimeout(() => {
-          oscillator3.stop();
-        }, 300);
-      }, 500);
-    }, 300);
+        oscillator.stop();
+      }, 1000);
+    });
   }
 
   // Make the timer draggable
