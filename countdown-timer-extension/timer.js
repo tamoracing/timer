@@ -48,7 +48,6 @@ function createTimer(defaultMinutes, defaultSeconds, peopleList) {
         transition: opacity 0.3s, width 0.3s;
       }
       .countdown-timer.minimized {
-
         opacity: 0.7;
       }
       .countdown-timer:hover {
