@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Countdown Timer Options</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 16px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .button-group {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    button:hover {
+      background-color: #1765cc;
+    }
+    button.secondary {
+      background-color: #f8f9fa;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+    }
+    button.secondary:hover {
+      background-color: #f1f3f4;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 8px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .people-list {
+      margin-top: 15px;
+      border: 1px solid #e1e3e6;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .person-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e1e3e6;
+    }
+    .person-item:last-child {
+      border-bottom: none;
+    }
+    .person-name {
+      flex-grow: 1;
+    }
+    .person-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .delete-btn {
+      color: #d93025;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+    }
+    .delete-btn:hover {
+      background-color: rgba(217, 48, 37, 0.1);
+    }
+    .add-person-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .add-person-container input {
+      flex-grow: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Configuración del Temporizador</h1>
+  
+  <h2>Tiempo Predeterminado</h2>
+  <div class="form-group">
+    <label for="defaultMinutes">Minutos predeterminados:</label>
+    <input type="number" id="defaultMinutes" min="0" value="5">
+  </div>
+  
+  <div class="form-group">
+    <label for="defaultSeconds">Segundos predeterminados:</label>
+    <input type="number" id="defaultSeconds" min="0" max="59" value="0">
+  </div>
+  
+  <h2>Lista de Personas</h2>
+  <p>Agrega personas a la lista para mostrarlas en orden aleatorio desde el temporizador.</p>
+  
+  <div class="people-list" id="peopleList">
+    <!-- La lista de personas se generará dinámicamente aquí -->
+  </div>
+  
+  <div class="add-person-container">
+    <input type="text" id="newPersonName" placeholder="Nombre de la persona">
+    <button id="addPerson" class="secondary">Agregar</button>
+  </div>
+  
+  <div class="button-group">
+    <button id="save">Guardar Configuración</button>
+  </div>
+  
+  <div id="status" class="status"></div>
+  
+  <script src="options.js"></script>
+</body>
+</html>
